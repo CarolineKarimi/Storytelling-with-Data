@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storytelling with Data — before &amp; after</title>
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Eight charts, rebuilt twice each — once the way most tools default to, once the way they should look when the point actually lands.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,ital@9..144,300..700,9..144,600..700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#15181c;
+    --sub:#585349;
+    --paper:#faf9f5;
+    --paper-2:#f2f0e9;
+    --line:#e3dfd3;
+    --surface:#ffffff;
+    --grey:#9a9488;
+    --grey-mid:#a5a091;
+    --muted-fill:#dcd8cb;
+    /* fixed tokens for anything inside a chart panel — panels stay light in both
+       themes so Chart.js canvases never need to be recolored */
+    --panel-bg:#f2f0e9;
+    --panel-bg-after:#ffffff;
+    --panel-ink:#15181c;
+    --panel-sub:#585349;
+    --panel-line:#e3dfd3;
+    --accent:#2454c7;
+    --accent-soft:#e4ebfa;
+    --good:#1e8a5d;
+    --bad:#c1442a;
+    --busy1:#4c78a8; --busy2:#f58518; --busy3:#e45756; --busy4:#72b7b2;
+    --busy5:#54a24b; --busy6:#eeca3b; --busy7:#b279a2; --busy8:#9d755d;
+    --radius:14px;
+    --maxw:900px;
+    color-scheme: light;
+  }
+  [data-theme="dark"]{
+    --ink:#e9e6dd;
+    --sub:#a49e8d;
+    --paper:#111214;
+    --paper-2:#1a1b1e;
+    --line:#2b2c2f;
+    --surface:#1a1b1e;
+    color-scheme: dark;
+  }
+  [data-theme="dark"] .squiggle path[stroke="var(--muted-fill)"]{stroke:#3a3b3e;}
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.55;
+  }
+  ::selection{background:var(--accent); color:#fff;}
+  a{color:var(--accent);}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px;}
+  h1,h2,h3{font-family:'Fraunces',Georgia,serif; color:var(--ink); margin:0 0 .3em;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--sub);
+  }
+
+  /* ---------- HERO ---------- */
+  header.hero{
+    padding:110px 0 70px;
+    border-bottom:1px solid var(--line);
+    position:relative;
+    overflow:hidden;
+  }
+  header.hero .wrap{position:relative; z-index:2;}
+  .hero-eyebrow{color:var(--accent); font-weight:600; letter-spacing:.16em;}
+  h1.hero-title{
+    font-size:clamp(34px,6vw,58px);
+    font-weight:600;
+    line-height:1.06;
+    letter-spacing:-.01em;
+    max-width:11.5ch;
+    margin-top:.5em;
+  }
+  h1.hero-title em{
+    font-style:italic;
+    font-weight:400;
+    color:var(--accent);
+  }
+  .hero-sub{
+    max-width:56ch;
+    font-size:18px;
+    color:var(--sub);
+    margin-top:22px;
+  }
+  .hero-cta{margin-top:34px; display:flex; gap:14px; flex-wrap:wrap;}
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    letter-spacing:.03em;
+    padding:12px 18px;
+    border-radius:999px;
+    text-decoration:none;
+    border:1px solid var(--ink);
+    color:var(--ink);
+    transition:transform .15s ease, background .15s ease, color .15s ease;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn.solid{background:var(--ink); color:var(--paper); border-color:var(--ink);}
+  .btn.solid:hover{background:var(--accent); border-color:var(--accent);}
+  .btn.ghost:hover{background:var(--ink); color:var(--paper);}
+
+  .squiggle{
+    position:absolute; right:-60px; top:40px; width:520px; max-width:60vw; opacity:.9;
+  }
+
+  /* ---------- INTRO ---------- */
+  section.intro{padding:64px 0 20px;}
+  section.intro p{font-size:17px; color:var(--sub); max-width:66ch;}
+  section.intro p.lede{font-size:20px; color:var(--ink); font-family:'Fraunces',serif; font-weight:400;}
+
+  /* ---------- CASE STUDIES ---------- */
+  section.case{padding:64px 0; border-top:1px solid var(--line);}
+  .case-tag{
+    display:inline-block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--accent);
+    background:var(--accent-soft);
+    padding:4px 10px;
+    border-radius:999px;
+    margin-bottom:14px;
+  }
+  .case-head h2{font-size:clamp(22px,3vw,30px); font-weight:600;}
+  .case-brief{color:var(--sub); max-width:64ch; font-size:15.5px;}
+
+  .pair{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:22px;
+    margin-top:30px;
+  }
+  .panel{
+    background:var(--panel-bg);
+    border:1px solid var(--panel-line);
+    border-radius:var(--radius);
+    padding:18px 18px 20px;
+    display:flex; flex-direction:column;
+  }
+  .panel--after{
+    background:var(--panel-bg-after);
+    border-color:rgba(36,84,199,.28);
+    box-shadow:0 1px 0 rgba(36,84,199,.05), 0 8px 24px -18px rgba(36,84,199,.5);
+  }
+  .panel-label{
+    display:flex; align-items:center; gap:7px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    letter-spacing:.09em;
+    text-transform:uppercase;
+    color:var(--panel-sub);
+    margin-bottom:12px;
+  }
+  .panel--after .panel-label{color:var(--accent);}
+  .dot{width:7px; height:7px; border-radius:50%; background:var(--grey-mid); display:inline-block;}
+  .panel--after .dot{background:var(--accent);}
+
+  .chart-wrap{position:relative; height:280px; width:100%;}
+  .chart-wrap.short{height:190px;}
+  .chart-wrap.tall{height:340px;}
+
+  .notes{list-style:none; margin:14px 0 0; padding:0; font-size:13px; color:var(--panel-sub);}
+  .notes li{position:relative; padding-left:16px; margin-bottom:6px;}
+  .notes li::before{content:"–"; position:absolute; left:0; color:var(--grey-mid);}
+  .panel--after .notes li::before{content:"–"; color:var(--accent);}
+
+  .callout{
+    font-size:13px;
+    background:var(--accent-soft);
+    color:#173a8f;
+    border-left:2px solid var(--accent);
+    padding:8px 12px;
+    border-radius:6px;
+    margin-top:12px;
+  }
+
+  /* mini table for case 2 */
+  table.mini{width:100%; border-collapse:collapse; font-size:11.5px; margin-top:10px;}
+  table.mini th, table.mini td{padding:5px 4px; text-align:right; border-bottom:1px solid var(--panel-line);}
+  table.mini th:first-child, table.mini td:first-child{text-align:left;}
+  table.mini th{color:var(--panel-sub); font-weight:600; border-bottom:1px solid var(--panel-ink);}
+
+  /* HTML bars for case 2 after */
+  .band-rows{display:flex; flex-direction:column; gap:10px; margin-top:4px;}
+  .band-row{display:grid; grid-template-columns:92px 1fr; gap:10px; align-items:center;}
+  .band-name{font-size:12px; color:var(--panel-sub);}
+  .band-row.hl .band-name{color:var(--panel-ink); font-weight:600;}
+  .band-bars{display:flex; flex-direction:column; gap:3px;}
+  .qbar-row{display:flex; align-items:center; gap:6px;}
+  .qbar-label{width:20px; font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--grey-mid);}
+  .qbar-track{flex:1; background:transparent;}
+  .qbar-fill{height:11px; border-radius:2px; background:var(--muted-fill);}
+  .band-row.hl .qbar-fill{background:var(--accent);}
+  .qbar-val{width:38px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--panel-sub); text-align:right;}
+  .footnote{font-size:12px; color:var(--grey-mid); margin-top:10px; font-style:italic;}
+
+  /* heat strip for case 8 */
+  .heatstrip-label{font-size:11.5px; color:var(--panel-sub); margin:14px 0 4px;}
+  .heatstrip{display:grid; grid-template-columns:repeat(13, 1fr); gap:3px;}
+  .heatcell{
+    aspect-ratio:1.4;
+    border-radius:3px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:8.5px;
+    color:#fff;
+    text-shadow:0 1px 1px rgba(0,0,0,.25);
+  }
+
+  @media (max-width:760px){
+    .pair{grid-template-columns:1fr;}
+    header.hero{padding:80px 0 50px;}
+    .squiggle{display:none;}
+  }
+
+  /* ---------- PRACTICE DATA ---------- */
+  section.practice{
+    padding:64px 0;
+    border-top:1px solid var(--line);
+    background:var(--paper-2);
+  }
+  .practice-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:28px;
+    display:flex; flex-wrap:wrap; gap:24px; justify-content:space-between; align-items:center;
+  }
+  .practice-card h3{margin:0 0 6px; font-size:20px;}
+  .practice-card p{margin:0; color:var(--sub); font-size:14.5px; max-width:52ch;}
+  .map-mini{margin-top:26px; font-size:13px; color:var(--sub);}
+  .map-mini table{width:100%; border-collapse:collapse; font-size:12.5px; margin-top:8px;}
+  .map-mini th, .map-mini td{padding:6px 8px; border-bottom:1px solid var(--line); text-align:left;}
+  .map-mini th{color:var(--sub); font-weight:600;}
+
+  /* ---------- CHEAT SHEET ---------- */
+  section.cheat{padding:64px 0; border-top:1px solid var(--line);}
+  .cheat-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:28px;}
+  .cheat-card{border:1px solid var(--line); border-radius:12px; padding:18px; background:var(--paper-2);}
+  .cheat-card h4{margin:0 0 10px; font-size:13px; font-family:'IBM Plex Mono',monospace; letter-spacing:.05em; text-transform:uppercase;}
+  .cheat-card.reach h4{color:var(--good);}
+  .cheat-card.care h4{color:#a06a00;}
+  .cheat-card.avoid h4{color:var(--bad);}
+  .cheat-card ul{margin:0; padding-left:18px; font-size:13.5px; color:var(--sub);}
+  .cheat-card li{margin-bottom:6px;}
+  @media (max-width:760px){.cheat-grid{grid-template-columns:1fr;}}
+
+  /* ---------- NEXT ---------- */
+  section.next{padding:64px 0; border-top:1px solid var(--line); background:var(--paper-2);}
+  .next-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px 28px; margin-top:24px;}
+  .next-grid div{font-size:14.5px; color:var(--sub); padding-left:18px; position:relative;}
+  .next-grid div::before{content:"→"; position:absolute; left:0; color:var(--accent);}
+  @media (max-width:760px){.next-grid{grid-template-columns:1fr;}}
+
+  /* ---------- FOOTER ---------- */
+  footer{padding:50px 0 70px; border-top:1px solid var(--line);}
+  footer .wrap{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;}
+  footer .flinks a{color:var(--sub); text-decoration:none; margin-left:18px; font-size:13.5px;}
+  footer .flinks a:hover{color:var(--accent);}
+  footer .fname{font-family:'Fraunces',serif; font-size:16px;}
+
+  /* ---------- THEME TOGGLE ---------- */
+  #theme-toggle{
+    position:fixed;
+    top:18px; right:18px;
+    z-index:100;
+    display:flex; align-items:center; gap:7px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:.03em;
+    padding:9px 14px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--sub);
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  #theme-toggle:hover{border-color:var(--accent); color:var(--ink);}
+  #theme-toggle .tt-icon{font-size:13px; line-height:1;}
+  @media (max-width:600px){
+    #theme-toggle{ top:10px; right:10px; padding:7px 10px; font-size:11px; }
+    #theme-toggle .tt-label{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<button id="theme-toggle" type="button" aria-label="Toggle dark mode" aria-pressed="false">
+  <span class="tt-icon">🌙</span><span class="tt-label">Dark mode</span>
+</button>
+
+<header class="hero">
+  <svg class="squiggle" viewBox="0 0 520 220" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M10 160 C 60 40, 110 200, 160 90 S 260 20, 300 140 S 420 30, 470 100" stroke="var(--muted-fill)" stroke-width="3" stroke-linecap="round"/>
+    <path d="M10 150 C 90 130, 170 135, 250 118 S 400 95, 500 70" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="500" cy="70" r="6" fill="var(--accent)"/>
+  </svg>
+  <div class="wrap">
+    <div class="eyebrow hero-eyebrow">Portfolio · Data Visualization</div>
+    <h1 class="hero-title">I don't just make charts.<br>I make the point <em>obvious.</em></h1>
+    <p class="hero-sub">Eight charts below, each rebuilt twice — first the way a default export looks, then the way it should look once someone has decided what it's actually trying to say. Same data, same story, very different chance of being understood in five seconds.</p>
+    <div class="hero-cta">
+      <a class="btn solid" href="#case-1">See the first rebuild ↓</a>
+      <a class="btn ghost" href="#practice">Try the practice data</a>
+    </div>
+  </div>
+</header>
+
+<section class="intro">
+  <div class="wrap">
+    <!-- EDIT ME: 2-3 sentences, first person, on why this matters to YOU professionally —
+         not what the page does, but what problem you keep running into that this solves.
+         Example prompt to answer: "The number was never the hard part — getting someone
+         to act on it was." Replace the sentence below with your own version. -->
+    <p style="font-size:15.5px; color:var(--sub); max-width:64ch;">I keep landing in rooms where the analysis was right and the room still didn't move — because the chart made someone work for the point instead of handing it to them. This page is that habit made visible: the same data, once shown, once actually told.</p>
+    <p class="lede">A chart that is technically correct can still fail its audience. The data's all there — it's just not saying anything yet.</p>
+    <p>Every pair on this page starts from the same source numbers. The left panel is what most tools give you by default: every axis, every label, every color a chart type can hold. The right panel is what's left after deciding what the chart is actually <em>for</em> — usually one comparison, one trend, one number someone in the room needs to walk away remembering.</p>
+    <p>The practice is built on the framework in Cole Nussbaumer Knaflic's <em>Storytelling with Data</em>: choose an effective visual, cut anything that isn't carrying weight, direct attention on purpose, and say the "so what" out loud instead of leaving it for the audience to find.</p>
+  </div>
+</section>
+
+<!-- ============ CASE 1 — DUAL AXIS ============ -->
+<section class="case" id="case-1">
+  <div class="wrap">
+    <div class="case-head">
+      <span class="case-tag">Case 01 · Focus attention</span>
+      <h2>Email campaign activity</h2>
+      <p class="case-brief">Two survey metrics, tracked quarterly: the response rate (who opened the email) and the completion rate (who finished it). The intended story is simple — completion has held up well even as response rates crept up.</p>
+    </div>
+    <div class="pair">
+      <div class="panel panel--before">
+        <div class="panel-label"><span class="dot"></span>Showing data</div>
+        <div class="chart-wrap"><canvas id="c1-before"></canvas></div>
+        <ul class="notes">
+          <li>Two y-axes force constant back-and-forth reading between scales</li>
+          <li>Every point is labeled — eighteen numbers competing for attention</li>
+          <li>Long "Q1-2020" style labels crowd the x-axis</li>
+        </ul>
+      </div>
+      <div class="panel panel--after">
+        <div class="panel-label"><span class="dot"></span>Storytelling with data</div>
+        <div class="chart-wrap"><canvas id="c1-after"></canvas></div>
+        <ul class="notes">
+          <li>Both axes removed; the lines carry the shape, labels carry the values</li>
+          <li>Only the first, last, and turning points are labeled</li>
+          <li>Series named directly on the line — no legend to decode</li>
+          <li>Multi-year average added next to each name for instant context</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CASE 2 — STACKED BAR + TABLE ============ -->
+<section class="case" id="case-2">
+  <div class="wrap">
+    <div class="case-head">
+      <span class="case-tag">Case 02 · Eliminate clutter</span>
+      <h2>Length of hospital stay after surgery</h2>
+      <p class="case-brief">Share of patients in each age band, by quarter of 2019. The real question buried in this data: is the middle-aged group (25–36) growing as a share of surgical patients?</p>
+    </div>
+    <div class="pair">
+      <div class="panel panel--before">
+        <div class="panel-label"><span class="dot"></span>Showing data</div>
+        <div class="chart-wrap short"><canvas id="c2-before"></canvas></div>
+        <table class="mini" id="c2-table"></table>
+        <ul class="notes">
+          <li>The chart and the table repeat each other — pick one</li>
+          <li>Six overlapping colors with a title that doesn't say "in days"</li>
+        </ul>
+      </div>
+      <div class="panel panel--after">
+        <div class="panel-label"><span class="dot"></span>Storytelling with data</div>
+        <div class="band-rows" id="c2-after"></div>
+        <p class="footnote">Length of stay is unknown for an average of 1.3% of patients each quarter.</p>
+        <ul class="notes">
+          <li>Table gone — the bars are the labels now</li>
+          <li>25–36 is the only band colored; it's clearly the one growing</li>
+          <li>Title says exactly what's being measured, in days</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CASE 3 — NIGHTINGALE ROSE ============ -->
+<section class="case" id="case-3">
+  <div class="wrap">
+    <div class="case-head">
+      <span class="case-tag">Case 03 · Choose an effective visual</span>
+      <h2>Causes of mortality, Crimean War</h2>
+      <p class="case-brief">Florence Nightingale's original "rose diagram" was groundbreaking for 1858, arguing that more soldiers died of preventable disease than of wounds. It's also, honestly, hard to read today. Same data, rebuilt as a bar and a line.</p>
+    </div>
+    <div class="pair">
+      <div class="panel panel--before">
+        <div class="panel-label"><span class="dot"></span>Showing data (rose-style)</div>
+        <div class="chart-wrap tall"><canvas id="c3-before"></canvas></div>
+        <ul class="notes">
+          <li>24 monthly wedges, each colored independently — nothing to anchor a scan</li>
+          <li>Area is deceptive: doubling a wedge's radius quadruples its area</li>
+          <li>No easy way to compare one month's cause of death to another's</li>
+        </ul>
+      </div>
+      <div class="panel panel--after">
+        <div class="chart-wrap short" style="margin-bottom:14px;"><canvas id="c3-after-bar"></canvas></div>
+        <div class="chart-wrap"><canvas id="c3-after-line"></canvas></div>
+        <ul class="notes">
+          <li>Totals first, as a simple bar: disease dwarfs the other two causes</li>
+          <li>Monthly trend below, disease highlighted, wounds and other muted</li>
+          <li>The takeaway a reader needed in 1858 is now legible in five seconds</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CASE 4 — STACKED SURVEY ============ -->
+<section class="case" id="case-4">
+  <div class="wrap">
+    <div class="case-head">
+      <span class="case-tag">Case 04 · Focus attention</span>
+      <h2>Survey results, five items</h2>
+      <p class="case-brief">A five-point agreement scale across five survey items. Two audiences want two different reads: who's split by strength of opinion, and — more urgently — who's simply not on board yet.</p>
+    </div>
+    <div class="pair">
+      <div class="panel panel--before">
+        <div class="panel-label"><span class="dot"></span>Showing data</div>
+        <div class="chart-wrap"><canvas id="c4-before"></canvas></div>
+        <ul class="notes">
+          <li>Five categories, five colors, no values — reading requires a ruler</li>
+          <li>"Strongly" vs. plain agree/disagree adds precision nobody asked for here</li>
+        </ul>
+      </div>
+      <div class="panel panel--after">
+        <div class="panel-label"><span class="dot"></span>Storytelling with data</div>
+        <div class="chart-wrap"><canvas id="c4-after"></canvas></div>
+        <div class="callout">Item C stands out: nearly half of respondents are neutral. Worth a follow-up to find out why.</div>
+        <ul class="notes">
+          <li>Collapsed to disagree / neutral / agree — the decision that actually matters</li>
+          <li>Direct labels replace the axis; grey holds the middle, color marks the edges</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CASE 5 — TARGETS ============ -->
+<section class="case" id="case-5">
+  <div class="wrap">
+    <div class="case-head">
+      <span class="case-tag">Case 05 · Make it obvious</span>
+      <h2>Sales agents vs. target</h2>
+      <p class="case-brief">Two agents, four quarters each, one target line. The interesting comparison isn't the raw dollars — it's who's beating their number and when.</p>
+    </div>
+    <div class="pair">
+      <div class="panel panel--before">
+        <div class="panel-label"><span class="dot"></span>Showing data</div>
+        <div class="chart-wrap"><canvas id="c5-before"></canvas></div>
+        <ul class="notes">
+          <li>Sixteen bars of raw dollars — target and achieved, side by side, eight times</li>
+          <li>Target and achieved use equally loud colors, so neither one wins the eye</li>
+        </ul>
+      </div>
+      <div class="panel panel--after">
+        <div class="panel-label"><span class="dot"></span>Storytelling with data</div>
+        <div class="chart-wrap tall"><canvas id="c5-after"></canvas></div>
+        <div class="callout">Agent 1 swings hard with the seasons; Agent 2 grows steadily, on-season or off.</div>
+        <ul class="notes">
+          <li>One bar per quarter now: percent of target, not two raw dollar figures</li>
+          <li>Green clears the target line, warm grey misses it — color does the sorting</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CASE 6 — SO WHAT ============ -->
+<section class="case" id="case-6">
+  <div class="wrap">
+    <div class="case-head">
+      <span class="case-tag">Case 06 · Tell a story</span>
+      <h2>Cumulative shareholder return</h2>
+      <p class="case-brief">$100 invested in 2017, tracked against the S&amp;P 500 and a competitive index. This one's already well-designed by most checklists — clean axes, clear legend. It's still missing the "so what."</p>
+    </div>
+    <div class="pair">
+      <div class="panel panel--before">
+        <div class="panel-label"><span class="dot"></span>Showing data</div>
+        <div class="chart-wrap"><canvas id="c6-before"></canvas></div>
+        <ul class="notes">
+          <li>Well de-cluttered, clearly labeled axes — a genuinely decent chart</li>
+          <li>...and still just a chart. It reports; it doesn't argue anything</li>
+        </ul>
+      </div>
+      <div class="panel panel--after">
+        <div class="panel-label"><span class="dot"></span>Storytelling with data</div>
+        <div class="chart-wrap" id="c6-after-wrap" style="position:relative;"><canvas id="c6-after"></canvas></div>
+        <ul class="notes">
+          <li>Our company in green, benchmarks pushed back to grey</li>
+          <li>Two callouts do the interpreting the axis labels never could</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CASE 7 — BUBBLE ============ -->
+<section class="case" id="case-7">
+  <div class="wrap">
+    <div class="case-head">
+      <span class="case-tag">Case 07 · Choose an effective visual</span>
+      <h2>Marketing spend, sales &amp; profit by store</h2>
+      <p class="case-brief">Three dimensions at once: marketing expense (x), sales (y), profit (bubble size), split across two stores. Bubble charts are a last resort — but when a third dimension genuinely matters, this is how to keep it readable.</p>
+    </div>
+    <div class="pair">
+      <div class="panel panel--before">
+        <div class="panel-label"><span class="dot"></span>Showing data</div>
+        <div class="chart-wrap"><canvas id="c7-before"></canvas></div>
+        <ul class="notes">
+          <li>Ten bubbles, ten colors — the two stores that actually matter get lost</li>
+          <li>No labels; every value needs a hover to reveal itself</li>
+        </ul>
+      </div>
+      <div class="panel panel--after">
+        <div class="panel-label"><span class="dot"></span>Storytelling with data</div>
+        <div class="chart-wrap"><canvas id="c7-after"></canvas></div>
+        <div class="callout">Washing machines: high spend, low profit, across both stores. Store 2's computer spend is worth benchmarking against Store 1.</div>
+        <ul class="notes">
+          <li>Down to two hues — one per store — so the comparison reads instantly</li>
+          <li>Labels sit on the bubbles themselves; no legend hunting required</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CASE 8 — MAP ============ -->
+<section class="case" id="case-8">
+  <div class="wrap">
+    <div class="case-head">
+      <span class="case-tag">Case 08 · Choose an effective visual</span>
+      <h2>Minor population &amp; teacher counts, by state</h2>
+      <p class="case-brief">A choropleth map is the reflexive choice for anything with a state code attached — and it's often the weakest one. It's beautiful for "where," almost useless for "how much more."</p>
+    </div>
+    <div class="pair">
+      <div class="panel panel--before">
+        <div class="panel-label"><span class="dot"></span>Showing data (map-style encoding)</div>
+        <p class="heatstrip-label">Minor population, alphabetical by state — color is the only signal</p>
+        <div class="heatstrip" id="c8-pop"></div>
+        <p class="heatstrip-label" style="margin-top:14px;">Teachers, alphabetical by state</p>
+        <div class="heatstrip" id="c8-teach"></div>
+        <ul class="notes">
+          <li>Alphabetical order (or geography) buries the actual ranking</li>
+          <li>Hue alone can't carry precise comparison — is CO bigger than SC? Squint</li>
+        </ul>
+      </div>
+      <div class="panel panel--after">
+        <div class="panel-label"><span class="dot"></span>Storytelling with data</div>
+        <div class="chart-wrap short"><canvas id="c8-teach-after"></canvas></div>
+        <div class="chart-wrap short" style="margin-top:14px;"><canvas id="c8-pop-after"></canvas></div>
+        <ul class="notes">
+          <li>Sorted, not geographic — the ranking is the point</li>
+          <li>Only the extremes are labeled; the shape tells the rest</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRACTICE DATA ============ -->
+<section class="practice" id="practice">
+  <div class="wrap">
+    <span class="eyebrow">Try it yourself</span>
+    <h2 style="margin-top:8px;">The practice data is real, and it's yours</h2>
+    <p style="color:var(--sub); max-width:64ch;">Every chart above is rebuilt from the same spreadsheet — one tab per case, "before" numbers and "after" numbers side by side. Download it, open it next to this page, and see if you'd have made the same calls. A few of these rebuilds could still go further; that's deliberate.</p>
+    <div class="practice-card" style="margin-top:24px;">
+      <div>
+        <h3>practice_data.xlsx</h3>
+        <p>Eight tabs, one per case study above — dual-axis survey data, hospital age bands, Nightingale's mortality records, the survey Likert data, sales targets, shareholder returns, store marketing spend, and the state-level population/teacher counts.</p>
+      </div>
+      <a class="btn solid" href="practice_data.xlsx" download>Download the workbook ↓</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CHEAT SHEET ============ -->
+<section class="cheat">
+  <div class="wrap">
+    <span class="eyebrow">Field notes</span>
+    <h2 style="margin-top:8px;">Choosing a visual, in short</h2>
+    <p style="color:var(--sub); max-width:64ch;">The working rules behind every rebuild above — my own condensed notes, not a universal law.</p>
+    <div class="cheat-grid">
+      <div class="cheat-card reach">
+        <h4>Reach for</h4>
+        <ul>
+          <li>A number or two on their own, set big — skip the chart entirely</li>
+          <li>Horizontal bars for categorical comparisons, ordered on purpose</li>
+          <li>Line charts for anything continuous over time, at consistent intervals</li>
+          <li>Scatter plots when the relationship between two things is the story</li>
+        </ul>
+      </div>
+      <div class="cheat-card care">
+        <h4>Handle with care</h4>
+        <ul>
+          <li>Tables — fine for lookup, weak for live presentation; let data labels do the work instead</li>
+          <li>Heat maps — always ship with a low-to-high legend</li>
+          <li>Secondary axes — try direct labeling or splitting the y-axis before reaching for one</li>
+          <li>Stacked bars — add absolute totals so the subcomponents aren't guesswork</li>
+        </ul>
+      </div>
+      <div class="cheat-card avoid">
+        <h4>Avoid</h4>
+        <ul>
+          <li>Pie and donut charts — a sorted horizontal bar almost always reads faster</li>
+          <li>3-D anything — it distorts the exact numbers it's supposed to show</li>
+          <li>Area charts — human eyes are bad at judging 2-D space</li>
+          <li>Choropleth maps for ranking — great for "where," bad for "how much more"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ NEXT ============ -->
+<section class="next">
+  <div class="wrap">
+    <span class="eyebrow">What's next</span>
+    <h2 style="margin-top:8px;">Still on the list</h2>
+    <div class="next-grid">
+      <div>A before/after slider on Case 01, so the transformation is one drag instead of two panels</div>
+      <div>Small-multiples version of the survey data, split by respondent segment</div>
+      <div>A live version of Case 05 where you can drop in your own targets and see the bars recolor</div>
+      <div>An accessible color-blind-safe palette toggle across every chart on this page</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap" style="flex-direction:column; align-items:flex-start; gap:6px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap:wrap; gap:14px;">
+      <div class="fname">Storytelling with Data — a working portfolio</div>
+      <div class="flinks">
+        <a href="https://github.com/CarolineKarimi" target="_blank" rel="noopener">GitHub</a>
+        <!-- EDIT: replace # with your real LinkedIn profile URL -->
+        <a href="#" target="_blank" rel="noopener">LinkedIn</a>
+        <!-- EDIT: replace with your real email address -->
+        <a href="mailto:you@example.com">Email</a>
+      </div>
+    </div>
+    <div style="font-size:12px; color:var(--grey-mid); font-family:'IBM Plex Mono',monospace;">Built with plain HTML, CSS, and Chart.js — no framework, no build step.</div>
+  </div>
+</footer>
+
+<script src="vendor/chart.umd.min.js"></script>
+<script src="vendor/chartjs-plugin-datalabels.min.js"></script>
+<script>
+(function(){
+  const root = document.documentElement;
+  const btn = document.getElementById('theme-toggle');
+  const icon = btn.querySelector('.tt-icon');
+  const label = btn.querySelector('.tt-label');
+
+  function apply(theme){
+    if(theme === 'dark'){
+      root.setAttribute('data-theme','dark');
+      icon.textContent = '☀️';
+      label.textContent = 'Light mode';
+      btn.setAttribute('aria-pressed','true');
+    } else {
+      root.removeAttribute('data-theme');
+      icon.textContent = '🌙';
+      label.textContent = 'Dark mode';
+      btn.setAttribute('aria-pressed','false');
+    }
+  }
+
+  let saved = null;
+  try { saved = localStorage.getItem('swd-theme'); } catch(e){}
+  apply(saved === 'dark' ? 'dark' : 'light');
+
+  btn.addEventListener('click', function(){
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    apply(next);
+    try { localStorage.setItem('swd-theme', next); } catch(e){}
+  });
+})();
+
+Chart.register(ChartDataLabels);
+Chart.defaults.plugins.datalabels.display = false;
+Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+Chart.defaults.color = '#585349';
+Chart.defaults.plugins.legend.labels.font = {family:"'IBM Plex Mono', monospace", size:11};
+Chart.defaults.plugins.tooltip.enabled = true;
+
+const C = {
+  ink:'#15181c', sub:'#585349', grey:'#a5a091', muted:'#dcd8cb', line:'#e3dfd3',
+  accent:'#2454c7', accentSoft:'#e4ebfa', good:'#1e8a5d', bad:'#c1442a',
+  busy:['#4c78a8','#f58518','#e45756','#72b7b2','#54a24b','#eeca3b','#b279a2','#9d755d']
+};
+
+function pct(v, d=0){ return (v*100).toFixed(d) + '%'; }
+
+/* ---------------- CASE 1 : dual axis line ---------------- */
+(function(){
+  const labels = ['Q1-2020','Q2-2020','Q3-2020','Q4-2020','Q1-2021','Q2-2021','Q3-2021','Q4-2021','Q1-2022'];
+  const completion = [0.91,0.93,0.91,0.89,0.84,0.88,0.91,0.87,0.83];
+  const response = [0.023,0.018,0.028,0.023,0.034,0.027,0.026,0.039,0.028];
+
+  new Chart(document.getElementById('c1-before'), {
+    type:'line',
+    data:{ labels, datasets:[
+      { label:'Completion Rate', data:completion, borderColor:C.busy[0], backgroundColor:C.busy[0], yAxisID:'y', tension:.3,
+        datalabels:{display:true, color:C.busy[0], font:{size:10,weight:'600'}, formatter:v=>pct(v,0), align:'top'} },
+      { label:'Response Rate', data:response, borderColor:C.busy[1], backgroundColor:C.busy[1], yAxisID:'y1', tension:.3,
+        datalabels:{display:true, color:C.busy[1], font:{size:10,weight:'600'}, formatter:v=>pct(v,1), align:'bottom'} },
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'top', labels:{boxWidth:10}}, datalabels:{} },
+      scales:{
+        y:{ min:0.5, max:1, position:'left', title:{display:true,text:'Completion'}, grid:{color:C.line} },
+        y1:{ min:0, max:0.06, position:'right', title:{display:true,text:'Response'}, grid:{drawOnChartArea:false} },
+        x:{ grid:{display:false}, ticks:{maxRotation:60, minRotation:60, font:{size:9}} }
+      }
+    }
+  });
+
+  const avgC = completion.reduce((a,b)=>a+b)/completion.length;
+  const avgR = response.reduce((a,b)=>a+b)/response.length;
+  const showIdx = new Set([0,3,4,7,8]);
+
+  new Chart(document.getElementById('c1-after'), {
+    type:'line',
+    data:{ labels, datasets:[
+      { label:'Completion Rate', data:completion, borderColor:C.accent, backgroundColor:C.accent, borderWidth:4, tension:.35, pointRadius:0,
+        datalabels:{display:ctx=>showIdx.has(ctx.dataIndex), color:C.accent, font:{size:11,weight:'600'}, formatter:v=>pct(v,0), align:'top', offset:6} },
+      { label:'Response Rate', data:response.map(v=>v*8+0.55), borderColor:'#e2933f', backgroundColor:'#e2933f', borderWidth:4, tension:.35, pointRadius:0,
+        datalabels:{display:ctx=>showIdx.has(ctx.dataIndex), color:'#e2933f', font:{size:11,weight:'600'}, formatter:(v,ctx)=>pct(response[ctx.dataIndex],1), align:'bottom', offset:6} },
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false, layout:{padding:{right:96}},
+      plugins:{ legend:{display:false}, datalabels:{},
+        tooltip:{callbacks:{label:(ctx)=> ctx.datasetIndex===0 ? 'Completion '+pct(completion[ctx.dataIndex],0) : 'Response '+pct(response[ctx.dataIndex],1)}}
+      },
+      scales:{
+        y:{ display:false, min:0.5, max:1 },
+        x:{ display:false }
+      }
+    },
+    plugins:[{
+      id:'endLabels',
+      afterDraw(chart){
+        const {ctx, chartArea} = chart;
+        ctx.save();
+        ctx.font = "600 12px 'Inter', sans-serif";
+        ctx.textBaseline='middle';
+        const y0 = chart.getDatasetMeta(0).data.at(-1).y;
+        const y1 = chart.getDatasetMeta(1).data.at(-1).y;
+        ctx.fillStyle = C.accent;
+        ctx.fillText('Completion Rate', chartArea.right+8, y0-7);
+        ctx.font = "400 11px 'IBM Plex Mono', monospace";
+        ctx.fillText('avg '+pct(avgC,0), chartArea.right+8, y0+9);
+        ctx.font = "600 12px 'Inter', sans-serif";
+        ctx.fillStyle = '#e2933f';
+        ctx.fillText('Response Rate', chartArea.right+8, y1-7);
+        ctx.font = "400 11px 'IBM Plex Mono', monospace";
+        ctx.fillText('avg '+pct(avgR,1), chartArea.right+8, y1+9);
+        ctx.restore();
+      }
+    }]
+  });
+})();
+
+/* ---------------- CASE 2 : stacked bar + table / band rows ---------------- */
+(function(){
+  const quarters = ['2019/Q1','2019/Q2','2019/Q3','2019/Q4'];
+  const cats = ['≤24','25–36','37–48','49–59','60+','Unknown'];
+  const data = {
+    '≤24':     [12.2,14.3,19.5,25.4],
+    '25–36':   [53.9,58.3,52.2,50.3],
+    '37–48':   [6.3,4.1,2.8,2.7],
+    '49–59':   [18.9,16.7,17.4,14.4],
+    '60+':     [6.9,5.9,7.0,5.6],
+    'Unknown': [1.8,0.7,1.1,1.7],
+  };
+
+  new Chart(document.getElementById('c2-before'), {
+    type:'bar',
+    data:{ labels:quarters, datasets:cats.map((c,i)=>({
+      label:c, data:data[c], backgroundColor:C.busy[i], stack:'s'
+    })) },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'top', labels:{boxWidth:9, font:{size:9}} } },
+      scales:{ x:{stacked:true, max:100, grid:{color:C.line}, ticks:{callback:v=>v+'%'}}, y:{stacked:true, grid:{display:false}} }
+    }
+  });
+
+  const tbl = document.getElementById('c2-table');
+  tbl.innerHTML = '<tr><th></th>'+cats.map(c=>`<th>${c}</th>`).join('')+'</tr>' +
+    quarters.map((q,qi)=> '<tr><td>'+q+'</td>'+cats.map(c=>`<td>${data[c][qi]}%</td>`).join('')+'</tr>').join('');
+
+  const bandNames = ['24 and below','25 to 36','37 to 48','49 to 59','60 and above'];
+  const bandData = [data['≤24'], data['25–36'], data['37–48'], data['49–59'], data['60+']];
+  const qLabels = ['Q1','Q2','Q3','Q4'];
+  const rows = document.getElementById('c2-after');
+  rows.innerHTML = bandNames.map((name,i)=>{
+    const hl = i===1;
+    const bars = bandData[i].map((v,qi)=>`
+      <div class="qbar-row">
+        <span class="qbar-label">${qLabels[qi]}</span>
+        <div class="qbar-track"><div class="qbar-fill" style="width:${Math.min(v*1.55,100)}%"></div></div>
+        <span class="qbar-val">${v}%</span>
+      </div>`).join('');
+    return `<div class="band-row ${hl?'hl':''}"><div class="band-name">${name}</div><div class="band-bars">${bars}</div></div>`;
+  }).join('');
+})();
+
+/* ---------------- CASE 3 : Nightingale ---------------- */
+(function(){
+  const months = ['Apr 54','May 54','Jun 54','Jul 54','Aug 54','Sep 54','Oct 54','Nov 54','Dec 54','Jan 55','Feb 55','Mar 55','Apr 55','May 55','Jun 55','Jul 55','Aug 55','Sep 55','Oct 55','Nov 55','Dec 55','Jan 56','Feb 56','Mar 56'];
+  const disease = [1,12,11,359,828,788,503,844,1725,2761,2120,1205,477,508,802,382,483,189,128,178,91,42,24,15];
+  const wounds  = [0,0,0,0,1,81,132,287,114,83,42,32,48,49,209,134,164,276,53,33,18,2,0,0];
+  const other   = [5,9,6,23,30,70,128,106,131,324,361,172,57,37,31,33,25,20,18,32,28,48,19,35];
+  const totals = months.map((_,i)=>disease[i]+wounds[i]+other[i]);
+
+  new Chart(document.getElementById('c3-before'), {
+    type:'polarArea',
+    data:{ labels:months, datasets:[{ data:totals,
+      backgroundColor: months.map((_,i)=> C.busy[i % C.busy.length] + 'b0') }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{ r:{ ticks:{display:false}, grid:{color:C.line} } }
+    }
+  });
+
+  const sumD = disease.reduce((a,b)=>a+b), sumW = wounds.reduce((a,b)=>a+b), sumO = other.reduce((a,b)=>a+b);
+  const total = sumD+sumW+sumO;
+  new Chart(document.getElementById('c3-after-bar'), {
+    type:'bar',
+    data:{ labels:['Disease','Wounds','Other'], datasets:[{
+      data:[sumD,sumW,sumO], backgroundColor:[C.accent, C.muted, C.muted]
+    }] },
+    options:{
+      responsive:true, maintainAspectRatio:false, indexAxis:'x',
+      plugins:{ legend:{display:false}, datalabels:{display:true, anchor:'end', align:'top', color:C.ink,
+        font:{weight:'600', size:12}, formatter:v=>v.toLocaleString()} },
+      scales:{ y:{display:false}, x:{grid:{display:false}} }
+    }
+  });
+  const badge = document.createElement('div');
+  badge.className = 'callout';
+  badge.style.marginTop = '-4px';
+  badge.textContent = 'Disease accounted for ' + Math.round(sumD/total*100) + '% of deaths — more than wounds and every other cause combined.';
+  document.getElementById('c3-after-bar').closest('.chart-wrap').after(badge);
+
+  new Chart(document.getElementById('c3-after-line'), {
+    type:'line',
+    data:{ labels:months, datasets:[
+      { label:'Disease', data:disease, borderColor:C.accent, backgroundColor:C.accent, borderWidth:3, tension:.25, pointRadius:0 },
+      { label:'Wounds', data:wounds, borderColor:C.muted, backgroundColor:C.muted, borderWidth:2, tension:.25, pointRadius:0 },
+      { label:'Other', data:other, borderColor:'#c9c4b6', backgroundColor:'#c9c4b6', borderWidth:2, tension:.25, pointRadius:0 },
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'top', labels:{boxWidth:9,font:{size:9}}} },
+      scales:{ y:{grid:{color:C.line}}, x:{grid:{display:false}, ticks:{maxRotation:60,minRotation:60,font:{size:8}, autoSkip:true, maxTicksLimit:12}} }
+    }
+  });
+})();
+
+/* ---------------- CASE 4 : survey stacked ---------------- */
+(function(){
+  const items = ['Survey item A','Survey item B','Survey item C','Survey item D','Survey item E'];
+  const full = {
+    'Strongly Disagree':[0.05,0.06,0.06,0.084,0.16],
+    'Disagree':[0.05,0.11,0.14,0.32,0.25],
+    'Neutral':[0.30,0.35,0.45,0.20,0.32],
+    'Agree':[0.27,0.28,0.15,0.23,0.18],
+    'Strongly Agree':[0.332,0.20,0.20,0.17,0.09],
+  };
+  const fullKeys = Object.keys(full);
+  new Chart(document.getElementById('c4-before'), {
+    type:'bar',
+    data:{ labels:items, datasets:fullKeys.map((k,i)=>({ label:k, data:full[k], backgroundColor:C.busy[i], stack:'s' })) },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'top', labels:{boxWidth:9,font:{size:8}}} },
+      scales:{ x:{stacked:true, max:1, grid:{color:C.line}, ticks:{callback:v=>Math.round(v*100)+'%'}}, y:{stacked:true, grid:{display:false}} }
+    }
+  });
+
+  const grouped = {
+    'Disagree':[0.10,0.17,0.20,0.404,0.41],
+    'Neutral':[0.30,0.35,0.45,0.20,0.32],
+    'Agree':[0.602,0.48,0.35,0.40,0.27],
+  };
+  new Chart(document.getElementById('c4-after'), {
+    type:'bar',
+    data:{ labels:items, datasets:[
+      { label:'Disagree', data:grouped['Disagree'], backgroundColor:C.bad, stack:'s',
+        datalabels:{display:true, color:'#fff', font:{size:10,weight:'600'}, formatter:v=>Math.round(v*100)+'%'} },
+      { label:'Neutral', data:grouped['Neutral'], backgroundColor:C.muted, stack:'s',
+        datalabels:{display:true, color:'#6b6656', font:{size:10,weight:'600'}, formatter:v=>Math.round(v*100)+'%'} },
+      { label:'Agree', data:grouped['Agree'], backgroundColor:C.accent, stack:'s',
+        datalabels:{display:true, color:'#fff', font:{size:10,weight:'600'}, formatter:v=>Math.round(v*100)+'%'} },
+    ]},
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'top', labels:{boxWidth:9,font:{size:9}}}, datalabels:{} },
+      scales:{ x:{stacked:true, max:1, display:false}, y:{stacked:true, grid:{display:false}} }
+    }
+  });
+})();
+
+/* ---------------- CASE 5 : targets ---------------- */
+(function(){
+  const rows = [
+    {agent:'Agent 1', q:'Q1', target:4000, achieved:5000},
+    {agent:'Agent 1', q:'Q2', target:5500, achieved:2000},
+    {agent:'Agent 1', q:'Q3', target:7000, achieved:9000},
+    {agent:'Agent 1', q:'Q4', target:10000, achieved:4000},
+    {agent:'Agent 2', q:'Q1', target:4000, achieved:3500},
+    {agent:'Agent 2', q:'Q2', target:5500, achieved:4800},
+    {agent:'Agent 2', q:'Q3', target:7000, achieved:6700},
+    {agent:'Agent 2', q:'Q4', target:10000, achieved:11000},
+  ];
+  const labels = rows.map(r=>r.agent.replace('Agent ','A')+' '+r.q);
+
+  new Chart(document.getElementById('c5-before'), {
+    type:'bar',
+    data:{ labels, datasets:[
+      { label:'Target', data:rows.map(r=>r.target), backgroundColor:C.busy[0] },
+      { label:'Achieved', data:rows.map(r=>r.achieved), backgroundColor:C.busy[2] },
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'top'} },
+      scales:{ x:{ticks:{font:{size:9}}, grid:{display:false}}, y:{grid:{color:C.line}} }
+    }
+  });
+
+  const pcts = rows.map(r=> r.achieved/r.target);
+  new Chart(document.getElementById('c5-after'), {
+    type:'bar',
+    data:{ labels, datasets:[{
+      data:pcts.map(p=>Math.round(p*100)),
+      backgroundColor: pcts.map(p=> p>=1 ? C.good : '#d99a4e')
+    }]},
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, datalabels:{display:true, anchor:'end', align:'right', color:C.ink,
+        font:{weight:'600', size:11}, formatter:v=>v+'%'} },
+      scales:{ x:{display:false, max:135}, y:{grid:{display:false}} }
+    },
+    plugins:[{
+      id:'targetLine',
+      afterDraw(chart){
+        const {ctx, chartArea, scales:{x}} = chart;
+        const px = x.getPixelForValue(100);
+        ctx.save();
+        ctx.strokeStyle = C.sub; ctx.setLineDash([3,3]); ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(px, chartArea.top); ctx.lineTo(px, chartArea.bottom); ctx.stroke();
+        ctx.restore();
+      }
+    }]
+  });
+})();
+
+/* ---------------- CASE 6 : shareholder return ---------------- */
+(function(){
+  const years = [2017,2018,2019,2020,2021,2022];
+  const ours = [100,86,125,111,165,126];
+  const sp = [100,96,126,149,191,157];
+  const comp = [100,83,113,101,140,110];
+
+  new Chart(document.getElementById('c6-before'), {
+    type:'line',
+    data:{ labels:years, datasets:[
+      { label:'Our company', data:ours, borderColor:C.busy[0], backgroundColor:C.busy[0], tension:.25 },
+      { label:'S&P 500', data:sp, borderColor:C.busy[1], backgroundColor:C.busy[1], tension:.25 },
+      { label:'Competitive index', data:comp, borderColor:C.busy[3], backgroundColor:C.busy[3], tension:.25 },
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'right', labels:{boxWidth:9,font:{size:9}}} },
+      scales:{ y:{title:{display:true,text:'Return per $100'}, grid:{color:C.line}}, x:{grid:{display:false}} }
+    }
+  });
+
+  new Chart(document.getElementById('c6-after'), {
+    type:'line',
+    data:{ labels:years, datasets:[
+      { label:'Our company', data:ours, borderColor:C.good, backgroundColor:C.good, borderWidth:4, tension:.3, pointRadius:0 },
+      { label:'S&P 500', data:sp, borderColor:'#9a9686', backgroundColor:'#9a9686', borderWidth:2, tension:.3, pointRadius:0 },
+      { label:'Competitive index', data:comp, borderColor:'#c9c4b6', backgroundColor:'#c9c4b6', borderWidth:2, tension:.3, pointRadius:0 },
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false, layout:{padding:{right:130, bottom:6}},
+      plugins:{ legend:{display:false} },
+      scales:{ y:{display:false}, x:{grid:{display:false}, ticks:{font:{size:10}}} }
+    },
+    plugins:[{
+      id:'callouts',
+      afterDraw(chart){
+        const {ctx, chartArea} = chart;
+        const m0 = chart.getDatasetMeta(0).data;
+        const m1 = chart.getDatasetMeta(1).data;
+        const m2 = chart.getDatasetMeta(2).data;
+        ctx.save();
+        ctx.font = "600 11px 'Inter', sans-serif";
+        ctx.fillStyle = C.good; ctx.textBaseline='middle';
+        ctx.fillText('Our company, $'+ours.at(-1), chartArea.right+8, m0.at(-1).y);
+        ctx.fillStyle = '#7a7666';
+        ctx.fillText('S&P 500, $'+sp.at(-1), chartArea.right+8, m1.at(-1).y);
+        ctx.fillText('Competitive index, $'+comp.at(-1), chartArea.right+8, m2.at(-1).y);
+        // 2019 callout
+        ctx.font = "500 10.5px 'Inter', sans-serif";
+        ctx.fillStyle = C.good;
+        const p2019 = m0[2];
+        ctx.textAlign='center';
+        wrapText(ctx, 'Closest to matching the S&P 500', p2019.x, p2019.y-34, 130, 12);
+        ctx.textAlign='left';
+        ctx.restore();
+      }
+    }]
+  });
+
+  function wrapText(ctx, text, x, y, maxWidth, lineHeight){
+    const words = text.split(' ');
+    let line='', yy=y;
+    for(const w of words){
+      const test = line + w + ' ';
+      if(ctx.measureText(test).width > maxWidth && line){
+        ctx.fillText(line, x, yy); line = w + ' '; yy += lineHeight;
+      } else { line = test; }
+    }
+    ctx.fillText(line, x, yy);
+  }
+})();
+
+/* ---------------- CASE 7 : bubble ---------------- */
+(function(){
+  const store1 = [ // purple-ish before, accent after
+    {code:'PS', exp:3500, sales:15000, profit:7600},
+    {code:'CP', exp:4500, sales:40000, profit:8900},
+    {code:'WM', exp:10000, sales:22000, profit:3400},
+    {code:'DW', exp:5500, sales:18000, profit:2300},
+    {code:'HT', exp:6000, sales:12000, profit:1550},
+  ];
+  const store2 = [
+    {code:'PS', exp:1500, sales:30000, profit:9500},
+    {code:'CP', exp:12500, sales:20000, profit:7500},
+    {code:'WM', exp:8000, sales:12500, profit:2500},
+    {code:'DW', exp:7500, sales:25000, profit:3000},
+    {code:'HT', exp:5000, sales:8000, profit:2000},
+  ];
+  const allProfits = [...store1, ...store2].map(d=>d.profit);
+  const minP = Math.min(...allProfits), maxP = Math.max(...allProfits);
+  const minR = 14, maxR = 34;
+  function radiusFor(profit){
+    const t = (profit - minP) / (maxP - minP);
+    return minR + t * (maxR - minR);
+  }
+
+  new Chart(document.getElementById('c7-before'), {
+    type:'bubble',
+    data:{ datasets: [...store1, ...store2].map((d,i)=>({
+      label:d.code+' '+(i<5?'S1':'S2'),
+      data:[{x:d.exp, y:d.sales, r:radiusFor(d.profit)}],
+      backgroundColor:C.busy[i%8]+'aa'
+    })) },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'top', labels:{boxWidth:8, font:{size:8}}} },
+      scales:{ x:{title:{display:true,text:'Marketing expense'}, grid:{color:C.line}}, y:{title:{display:true,text:'Sales'}, grid:{color:C.line}} }
+    }
+  });
+
+  new Chart(document.getElementById('c7-after'), {
+    type:'bubble',
+    data:{ datasets:[
+      { label:'Store 1', data:store1.map(d=>({x:d.exp,y:d.sales,r:radiusFor(d.profit), code:d.code, profit:d.profit})),
+        backgroundColor:C.accent+'b0',
+        datalabels:{display:true, color:'#fff', font:{size:10,weight:'700'}, formatter:(v,ctx)=>store1[ctx.dataIndex].code} },
+      { label:'Store 2', data:store2.map(d=>({x:d.exp,y:d.sales,r:radiusFor(d.profit), code:d.code, profit:d.profit})),
+        backgroundColor:C.good+'b0',
+        datalabels:{display:true, color:'#fff', font:{size:10,weight:'700'}, formatter:(v,ctx)=>store2[ctx.dataIndex].code} },
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'top', labels:{boxWidth:9,font:{size:10}}}, datalabels:{} },
+      scales:{ x:{title:{display:true,text:'Marketing expense'}, grid:{color:C.line}}, y:{title:{display:true,text:'Sales'}, grid:{color:C.line}} }
+    }
+  });
+})();
+
+/* ---------------- CASE 8 : map ---------------- */
+(function(){
+  const states = [
+    {code:'CA',pop:8989764,teach:271523},{code:'TX',pop:7398009,teach:356877},{code:'FL',pop:4229071,teach:186128},
+    {code:'NY',pop:4068092,teach:213159},{code:'IL',pop:2857131,teach:128204},{code:'PA',pop:2648911,teach:121918},
+    {code:'OH',pop:2593325,teach:98912},{code:'GA',pop:2505531,teach:116022},{code:'NC',pop:2300622,teach:100401},
+    {code:'MI',pop:2164668,teach:84473},{code:'NJ',pop:1953631,teach:115496},{code:'VA',pop:1869737,teach:85936},
+    {code:'WA',pop:1663283,teach:60183},{code:'AZ',pop:1642647,teach:47868},{code:'IN',pop:1568130,teach:61018},
+    {code:'TN',pop:1506219,teach:64019},{code:'MO',pop:1376751,teach:68496},{code:'MA',pop:1366857,teach:73381},
+    {code:'MD',pop:1340148,teach:60175},{code:'MN',pop:1302615,teach:57260},{code:'WI',pop:1276101,teach:58598},
+    {code:'CO',pop:1265232,teach:52373},{code:'SC',pop:1105655,teach:52467},{code:'LA',pop:1095916,teach:40281},
+    {code:'AL',pop:1089820,teach:41802},{code:'KY',pop:1008829,teach:42064},{code:'OK',pop:956433,teach:41597},
+    {code:'UT',pop:932462,teach:29212},{code:'OR',pop:873567,teach:29909},{code:'CT',pop:735193,teach:45081},
+    {code:'IA',pop:730767,teach:35553},{code:'MS',pop:706138,teach:31625},{code:'KS',pop:705961,teach:36387},
+    {code:'AR',pop:703180,teach:35800},{code:'NV',pop:688997,teach:23709},{code:'NM',pop:482153,teach:21092},
+    {code:'NE',pop:476841,teach:23771},{code:'ID',pop:446972,teach:16592},{code:'WV',pop:364160,teach:19239},
+    {code:'HI',pop:303413,teach:12033},{code:'NH',pop:258170,teach:14589},{code:'ME',pop:250404,teach:14760},
+    {code:'MT',pop:229434,teach:10515},{code:'SD',pop:217606,teach:9833},{code:'RI',pop:205202,teach:10687},
+    {code:'DE',pop:203616,teach:9399},{code:'AK',pop:183816,teach:7743},{code:'ND',pop:178697,teach:9284},
+    {code:'WY',pop:134775,teach:7335},{code:'DC',pop:127494,teach:6659},{code:'VT',pop:115973,teach:8313},
+  ];
+
+  function heat(el, key){
+    const sorted = [...states].sort((a,b)=>a.code.localeCompare(b.code));
+    const max = Math.max(...states.map(s=>s[key]));
+    el.innerHTML = sorted.map(s=>{
+      const t = s[key]/max;
+      const l = 90 - t*58;
+      return `<div class="heatcell" style="background:hsl(221,58%,${l}%)" title="${s.code}: ${s[key].toLocaleString()}">${s.code}</div>`;
+    }).join('');
+  }
+  heat(document.getElementById('c8-pop'), 'pop');
+  heat(document.getElementById('c8-teach'), 'teach');
+
+  function sortedChart(elId, key, colorHigh){
+    const sorted = [...states].sort((a,b)=>b[key]-a[key]);
+    new Chart(document.getElementById(elId), {
+      type:'bar',
+      data:{ labels:sorted.map(s=>s.code), datasets:[{
+        data:sorted.map(s=>s[key]), backgroundColor:colorHigh, barPercentage:0.9, categoryPercentage:1
+      }]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, datalabels:{
+          display:ctx=> ctx.dataIndex===0 || ctx.dataIndex===sorted.length-1,
+          formatter:(v,ctx)=> sorted[ctx.dataIndex].code+', '+v.toLocaleString(),
+          anchor:'end', align:'top', color:C.ink, font:{size:9,weight:'600'}, rotation:0
+        } },
+        scales:{ x:{display:false, grid:{display:false}}, y:{display:false} }
+      }
+    });
+  }
+  sortedChart('c8-teach-after', 'teach', C.accent);
+  sortedChart('c8-pop-after', 'pop', C.good);
+})();
+</script>
+</body>
+</html>
