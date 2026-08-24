@@ -1,6 +1,6 @@
 # Storytelling with Data
 
-**[→ View the live page](https://carolinekarimi.github.io/Storytelling-with-Data/)**
+** <a href="https://carolinekarimi.github.io/storytelling-with-data/" target="_blank" rel="noopener noreferrer"><strong>→ View the live page</strong></a> **
 
 ![Preview of the storytelling-with-data page](preview.png)
 
